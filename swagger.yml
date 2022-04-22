@@ -16,11 +16,12 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               type: object
+              required:
+                - password
               properties:
                 password:
                   description: Password value to be hashed.
                   type: string
-                  required: true
       responses:
         "200":
           description: "Returns the identifier for the submited hash."
