@@ -20,16 +20,15 @@ var (
 )
 
 func Hash(writer http.ResponseWriter, request *http.Request) {
-	start := time.Now()
 	switch request.Method {
 	case http.MethodGet:
 		getHashHandler(writer, request)
 	case http.MethodPost:
+		start := time.Now()
 		postHashHandler(writer, request)
+		duration := time.Since(start)
+		go updateSumOfRequestTimes(duration)
 	}
-	duration := time.Since(start)
-
-	go updateSumOfRequestTimes(duration)
 }
 
 func updateSumOfRequestTimes(duration time.Duration) {
