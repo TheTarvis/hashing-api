@@ -7,6 +7,11 @@ import (
 	"net/http"
 )
 
+type StatsPayload struct {
+	Total   int64 `json:"total"`
+	Average int64 `json:"average"`
+}
+
 func Stats(writer http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case http.MethodGet:
@@ -15,11 +20,6 @@ func Stats(writer http.ResponseWriter, request *http.Request) {
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-}
-
-type StatsPayload struct {
-	Total   int64 `json:"total"`
-	Average int64 `json:"average"`
 }
 
 func getStatsHandler(writer http.ResponseWriter, _ *http.Request) {

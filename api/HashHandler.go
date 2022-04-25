@@ -28,16 +28,21 @@ func Hash(writer http.ResponseWriter, request *http.Request) {
 		postHashHandler(writer, request)
 		duration := time.Since(start)
 		go updateSumOfRequestTimes(duration)
+	default:
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 }
 
 func updateSumOfRequestTimes(duration time.Duration) {
 	sumLock.Lock()
+	defer sumLock.Unlock()
 	sumOfRequestTimes += duration.Microseconds()
-	sumLock.Unlock()
 }
 
 func GetSumOfRequestTimes() int64 {
+	sumLock.Lock()
+	defer sumLock.Unlock()
 	return sumOfRequestTimes
 }
 
@@ -72,6 +77,7 @@ func getHashHandler(writer http.ResponseWriter, request *http.Request) {
 		}
 	} else {
 		writer.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 
@@ -79,7 +85,7 @@ func postHashHandler(writer http.ResponseWriter, request *http.Request) {
 	password := request.PostFormValue("password")
 	if password == "" {
 		writer.WriteHeader(400)
-		_, err := fmt.Fprintf(writer, "password must not be empty and must be supplied in the request's form hash.")
+		_, err := fmt.Fprintf(writer, "password must not be empty and must be supplied in the request's form")
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 			log.Printf("Error writing response for Post Hash Handler. %v", err)

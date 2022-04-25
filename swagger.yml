@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   description: "This API handles hashing a password supplied in a form request and providing statistics."
-  version: "0.0.1"
+  version: v0.0.1
   title: "JumpCloud Hashing API"
   contact:
     email: "wilson.travis.t@gmail.com"

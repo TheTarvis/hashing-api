@@ -58,8 +58,8 @@ func TestGet(t *testing.T) {
 	}{
 		{"test hashservice returns initial expectations", &State{
 			hashCount:     0,
-			hashCountLock: sync.Mutex{},
-			hashes:        sync.Map{},
+			hashCountLock: &sync.Mutex{},
+			hashes:        &sync.Map{},
 		}},
 	}
 	for _, tt := range tests {
@@ -74,8 +74,8 @@ func TestGet(t *testing.T) {
 func TestHashService_GetHashedPassword(t *testing.T) {
 	type fields struct {
 		hashCount     int64
-		hashCountLock sync.Mutex
-		hashes        sync.Map
+		hashCountLock *sync.Mutex
+		hashes        *sync.Map
 	}
 	type args struct {
 		identifier int64
@@ -87,7 +87,31 @@ func TestHashService_GetHashedPassword(t *testing.T) {
 		wantValue string
 		wantFound bool
 	}{
-		// TODO: Add test cases.
+		{"Test no saved password returns not found.",
+			fields{
+				hashCount:     0,
+				hashCountLock: &sync.Mutex{},
+				hashes:        &sync.Map{},
+			},
+			args{
+				identifier: 1,
+			},
+			"",
+			false,
+		},
+		// TODO TW: Figure out how to preload the sync.Maps
+		/*{"Test expected saved password returns found and expected value",
+			fields{
+				hashCount:     0,
+				hashCountLock: &sync.Mutex{},
+				hashes:        expectedSavedMap,
+			},
+			args{
+				identifier: 1,
+			},
+			expectedSavedValue,
+			true,
+		},*/
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -97,11 +121,72 @@ func TestHashService_GetHashedPassword(t *testing.T) {
 				hashes:        tt.fields.hashes,
 			}
 			gotValue, gotFound := service.GetHashedPassword(tt.args.identifier)
-			if gotValue != tt.wantValue {
-				t.Errorf("GetHashedPassword() gotValue = %v, want %v", gotValue, tt.wantValue)
-			}
 			if gotFound != tt.wantFound {
 				t.Errorf("GetHashedPassword() gotFound = %v, want %v", gotFound, tt.wantFound)
+			}
+			if tt.wantFound && gotValue != tt.wantValue {
+				t.Errorf("GetHashedPassword() gotValue = %v, want %v", gotValue, tt.wantValue)
+			}
+
+		})
+	}
+}
+
+func TestState_SavePassword(t *testing.T) {
+	type fields struct {
+		hashCount     int64
+		hashCountLock *sync.Mutex
+		hashes        *sync.Map
+	}
+	type args struct {
+		identifier int64
+		password   string
+	}
+	type wantedArgs struct {
+		identifier int64
+		password   string
+		found      bool
+	}
+	tests := []struct {
+		name       string
+		fields     fields
+		args       args
+		wantedArgs []wantedArgs
+	}{
+		{"Test Saving password uses the correct identifier for key and properly saves the password",
+			fields{
+				hashCount:     0,
+				hashCountLock: &sync.Mutex{},
+				hashes:        &sync.Map{},
+			},
+			args{
+				identifier: 1,
+				password:   "asdf",
+			},
+			[]wantedArgs{{
+				identifier: 1,
+				password:   base64Encode(hash("asdf")),
+				found:      true,
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := &State{
+				hashCount:     tt.fields.hashCount,
+				hashCountLock: tt.fields.hashCountLock,
+				hashes:        tt.fields.hashes,
+			}
+			state.SavePassword(tt.args.identifier, tt.args.password)
+			for _, arg := range tt.wantedArgs {
+				got, ok := tt.fields.hashes.Load(arg.identifier)
+				if ok != arg.found {
+					t.Errorf("SavePassword() = %v, want %v", ok, arg.found)
+				}
+				wanted := arg.password
+				if got != wanted {
+					t.Errorf("SavePassword() = %v, want %v", got, wanted)
+				}
 			}
 		})
 	}
@@ -110,15 +195,26 @@ func TestHashService_GetHashedPassword(t *testing.T) {
 func TestHashService_GetIdentifier(t *testing.T) {
 	type fields struct {
 		hashCount     int64
-		hashCountLock sync.Mutex
-		hashes        sync.Map
+		hashCountLock *sync.Mutex
+		hashes        *sync.Map
 	}
 	tests := []struct {
 		name   string
 		fields fields
 		want   int64
 	}{
-		// TODO: Add test cases.
+		{"Test no saved identifiers returns 1", fields{
+			hashCount:     0,
+			hashCountLock: &sync.Mutex{},
+			hashes:        &sync.Map{},
+		},
+			1},
+		{"Test one saved identifiers returns 2", fields{
+			hashCount:     1,
+			hashCountLock: &sync.Mutex{},
+			hashes:        &sync.Map{},
+		},
+			2},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -129,54 +225,6 @@ func TestHashService_GetIdentifier(t *testing.T) {
 			}
 			if got := service.GetNextIdentifier(); got != tt.want {
 				t.Errorf("GetNextIdentifier() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestHashService_SavePassword(t *testing.T) {
-	type fields struct {
-		hashCount     int
-		hashCountLock sync.Mutex
-		hashes        sync.Map
-	}
-	type args struct {
-		identifier int
-		password   string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			//service := &State{
-			//	hashCount:     tt.fields.hashCount,
-			//	hashCountLock: tt.fields.hashCountLock,
-			//	hashes:        tt.fields.hashes,
-			//}
-		})
-	}
-}
-
-func TestSha512(t *testing.T) {
-	type args struct {
-		value string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := hash(tt.args.value); got != tt.want {
-				t.Errorf("hash() = %v, want %v", got, tt.want)
 			}
 		})
 	}
