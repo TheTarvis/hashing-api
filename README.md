@@ -93,9 +93,16 @@ Right now anyone could shut the server down which isn't great.
 ## Questions
 1. Is there functionality with the returned identifier from `/hash` other than to be able to fetch the stored value?
    1. If there is no other functionality, can I suggest using UUIDs instead to avoid a possible collision with the identifiers.
-2. How long are the encoded strings expected to be available? 
+      1. Answer: Use the base64 encoded string of the SHA512 hash. You can explain in your README.md file why you would recommend using UUIDs instead
+2. How long are the encoded strings expected to be available?
+   1. Answer: No requirements around expiring encoded strings at this time.
 3. Do they need to be resilient on server restart?
+   1. Answer: No requirement to keep strings resilient at this time.
 4. To allow for backwards compatibility, is it okay to version in the API endpoints? For example, `/v1/hash`?
+   1. Answer: No requirement to allow for backwards compatibility. You can explain in your README.md file if you use /v1/
 5. I see a requirement to not use packages outside https://pkg.go.dev/std#stdlib, is this a hard requirement or can I use gin, https://github.com/gin-gonic/gin, for the webserver?
+   1. Answer: It's a hard requirement
 6. Any requirements around payload validation? For example: password field not supplied in form data.
+   1. Answer: handle it how you would if it were going in production
 7. For the `/stats` response body, is the total for both `/hash/` and `/hash/42` request? Or just `/hash`
+   1. Answer: only for /hash
