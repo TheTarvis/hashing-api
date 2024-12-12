@@ -1,4 +1,4 @@
-# JumpCloud Hashing API
+# Hashing API
 
 ## Goal
 This API will take in a supplied string to base64 encode and hash using SHA512.
